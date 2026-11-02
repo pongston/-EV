@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบบันทึกการใช้รถยนต์ & OCR</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+body{font-family:'Sarabun',sans-serif}
+th[contenteditable]{outline:1px dashed #f59e0b;outline-offset:-2px}
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 p-4 md:p-8">
+<div class="max-w-full mx-auto space-y-6">
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">🚗 ระบบบันทึกการใช้รถยนต์และการชาร์จไฟฟ้า</h1>
+    <p class="text-slate-500 text-sm mt-1">อ่านค่าจากรูป นำเข้า/ส่งออก Excel ตามฟอร์มกระดาษ (คลิกหัวคอลัมน์สถานที่ชาร์จเพื่อแก้ชื่อได้)</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl font-medium text-sm">📥 นำเข้า Excel
+      <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importExcel(event)"></label>
+    <label class="cursor-pointer bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-medium text-sm">📷 อ่านค่าจากรูป (OCR)
+      <input type="file" accept="image/*" class="hidden" onchange="processImage(event)"></label>
+    <button onclick="exportExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm">📤 ส่งออก Excel</button>
+  </div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div><label class="block text-xs font-semibold text-slate-500 mb-1">ทะเบียนรถ</label><input id="carId" value="พท 8205 สระบุรี" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+  <div><label class="block text-xs font-semibold text-slate-500 mb-1">ฝ่าย</label><input id="department" value="ผลิต" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+  <div><label class="block text-xs font-semibold text-slate-500 mb-1">แผนก</label><input id="section" value="ผลิต 1" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+</div>
+
+<div id="statusBox" class="hidden bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl"><span id="statusText" class="text-sm font-medium"></span></div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+  <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+    <h2 class="font-semibold text-slate-700">ตารางบันทึกการเดินทาง</h2>
+    <button onclick="addRow()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg">+ เพิ่มแถว</button>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs border-collapse">
+      <thead id="thead"></thead>
+      <tbody id="tbody" class="divide-y divide-slate-200"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+// ---- คอลัมน์ตามฟอร์มกระดาษ ----
+// ชื่อ 4 ช่องแรกของ "สถานที่ชาร์จ" อ่านลายมือไม่ชัด -> คลิกหัวคอลัมน์เพื่อแก้ชื่อ
+const chgLabels = ["สถานที่ชาร์จ 1","สถานที่ชาร์จ 2","สถานที่ชาร์จ 3","สถานที่ชาร์จ 4","ชาร์จภายนอก"];
+const COLS = [
+  {k:'date',t:'วันที่',w:'w-24'},{k:'driver',t:'ผู้ใช้รถ',w:'w-24'},{k:'purpose',t:'วัตถุประสงค์',w:'w-44'},
+  {k:'timeOut',t:'เวลาออก',w:'w-16',c:1},{k:'timeIn',t:'เวลาถึง',w:'w-16',c:1},
+  {k:'from',t:'ต้นทาง',w:'w-28'},{k:'to',t:'ปลายทาง',w:'w-28'},
+  {k:'odoStart',t:'ไมล์เริ่มต้น',w:'w-20',n:1},{k:'odoEnd',t:'ไมล์สิ้นสุด',w:'w-20',n:1},
+  {k:'dist',t:'รวมระยะทาง (กม.)',calc:1,bg:'bg-blue-50 text-blue-700'},
+  {k:'c1',n:1,chg:0,w:'w-16'},{k:'c2',n:1,chg:1,w:'w-16'},{k:'c3',n:1,chg:2,w:'w-16'},{k:'c4',n:1,chg:3,w:'w-16'},{k:'ext',n:1,chg:4,w:'w-20'},
+  {k:'chgStart',t:'มิเตอร์ชาร์จเริ่มต้น',w:'w-24',n:1,step:.1},{k:'chgEnd',t:'มิเตอร์ชาร์จสิ้นสุด',w:'w-24',n:1,step:.1},
+  {k:'kwh',t:'ยอดรวม kWh',calc:1,bg:'bg-emerald-50 text-emerald-700'}
+];
+const N = v => (v===''||v==null||isNaN(parseFloat(v))) ? null : parseFloat(v);
+const mk = (date,driver,purpose,timeOut,timeIn,from,to,odoStart,odoEnd,x={}) =>
+  ({date,driver,purpose,timeOut,timeIn,from,to,odoStart,odoEnd,c1:'',c2:'',c3:'',c4:'',ext:'',chgStart:'',chgEnd:'',...x});
+const W='เดินทางไปปฏิบัติงาน P.ตลิ่งชัน', O='สำนักงาน ITD', P='P.ตลิ่งชัน';
+
+// ข้อมูลจากใบบันทึก หน้า 2/3 (ชื่อที่ลายมือไม่ชัดให้ตรวจสอบอีกครั้ง)
+let logData = [
+  mk('15/07/2026','สุทัศน์',W,'06:00','18:30',O,P,52891,52948),
+  mk('15/07/2026','(ตรวจชื่อ)','(ตรวจวัตถุประสงค์)','14:00','16:00',P,'(ตรวจปลายทาง)',52948,52999,{ext:20.0}),
+  mk('16/07/2026','สุทัศน์',W,'06:10','18:30',O,P,52999,53048),
+  mk('17/07/2026','สุทัศน์',W,'06:15','19:00',O,P,53048,53079),
+  mk('17/07/2026','(ตรวจชื่อ)','(ตรวจวัตถุประสงค์)','14:30','15:15','(ตรวจต้นทาง)','(ตรวจปลายทาง)',53079,53156,{ext:13.95}),
+  mk('17/07/2026','(ตรวจชื่อ)','(ตรวจวัตถุประสงค์)','15:40','16:40','(ตรวจต้นทาง)',P,53156,53261,{ext:14.75}),
+  mk('18/07/2026','ตระกูล','ที่ทำการ ITD - P.ตลิ่งชัน','06:00','19:30',O,P,53261,53300,{c1:21.0,chgStart:3437.0,chgEnd:3458.0}),
+  mk('19/07/2026','ตระกูล',W,'06:10','18:00',O,P,53300,53358,{c1:6.6,chgStart:3458.0,chgEnd:3464.6}),
+  mk('20/07/2026','สุทัศน์',W,'06:00','19:30',O,P,53358,53382,{c1:10.2,chgStart:3464.6,chgEnd:3474.8}),
+  mk('21/07/2026','ตระกูล',W,'06:20','18:00',O,P,53382,53420,{c1:9.2,chgStart:3474.8,chgEnd:3484.0}),
+  mk('22/07/2026','สุทัศน์',W,'06:10','17:45',O,P,53420,53486,{c1:17.0,chgStart:3484.0,chgEnd:3501.0}),
+  mk('23/07/2026','ตระกูล',W,'06:20','12:00',O,P,53486,53494),
+  mk('23/07/2026','(ตรวจชื่อ)','(ตรวจวัตถุประสงค์)','13:00','20:00',P,'(ตรวจปลายทาง)',53494,53581,{c2:4.0,chgStart:3497.0,chgEnd:3501.0}),
+  mk('','','','','','','','','',{c1:3.4,chgStart:3501.0,chgEnd:3504.4}),
+  mk('','','(แถวจางในรูป ตรวจสอบ)','','','','',  '','',{ext:31.242}),
+  mk('24/07/2026','สุทัศน์',W,'06:10','18:30',O,P,53581,53628),
+  mk('25/07/2026','ตระกูล',W,'06:13','17:00',O,P,53628,53666)
+];
+
+const calc = r => {
+  const a=N(r.odoStart), b=N(r.odoEnd);
+  const dist = (a!=null&&b!=null) ? b-a : null;
+  const s=N(r.chgStart), e=N(r.chgEnd);
+  let kwh=null;
+  if (s!=null&&e!=null) kwh=e-s;
+  else { const sum=['c1','c2','c3','c4','ext'].reduce((t,k)=>t+(N(r[k])||0),0); if(sum>0) kwh=sum; }
+  return {dist, kwh};
+};
+const fmt = (v,d=1) => v==null ? '' : (Number.isInteger(v)?v:v.toFixed(d));
+const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+function renderHead(){
+  document.getElementById('thead').innerHTML =
+   '<tr class="bg-slate-100 font-semibold border-b"><th class="p-2 border-r text-center">#</th>' +
+   COLS.map(c=>{
+     if(c.chg!=null) return `<th contenteditable="true" onblur="chgLabels[${c.chg}]=this.innerText.trim()||chgLabels[${c.chg}]" class="p-2 border-r bg-amber-50 text-amber-800">${esc(chgLabels[c.chg])}</th>`;
+     return `<th class="p-2 border-r ${c.bg||''}">${c.t}</th>`;
+   }).join('') + '<th class="p-2"></th></tr>';
+}
+
+function renderTable(){
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  let tDist=0,tKwh=0;
+  logData.forEach((row,i)=>{
+    const {dist,kwh}=calc(row); tDist+=dist||0; tKwh+=kwh||0;
+    const tr=document.createElement('tr'); tr.className='hover:bg-slate-50';
+    tr.innerHTML=`<td class="p-2 border-r text-center font-medium">${i+1}</td>`+COLS.map(c=>{
+      if(c.calc){const v=c.k==='dist'?fmt(dist):fmt(kwh,3);return `<td class="p-2 border-r text-right font-semibold ${c.bg}">${v}</td>`;}
+      return `<td class="p-1 border-r"><input type="${c.n?'number':'text'}" ${c.step?`step="${c.step}"`:c.n?'step="any"':''} value="${esc(row[c.k])}" onchange="upd(${i},'${c.k}',this.value,${c.n?1:0})" class="w-full ${c.c?'text-center':''} ${c.n?'text-right':''} bg-transparent px-1 py-0.5 rounded border border-transparent focus:border-blue-400 focus:bg-white outline-none"></td>`;
+    }).join('')+`<td class="p-2 text-center"><button onclick="delRow(${i})" class="text-rose-500">🗑</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('tfoot').innerHTML=`<tr class="bg-slate-100 font-bold"><td class="p-2 text-right" colspan="10">รวม ${fmt(tDist)} กม.</td><td colspan="9" class="p-2 text-right">รวม ${fmt(tKwh,3)} kWh</td></tr>`;
+}
+function upd(i,k,v,isNum){ logData[i][k]=isNum?(v===''?'':parseFloat(v)):v; renderTable(); }
+function addRow(){ logData.push(mk('','','','','','','','','')); renderTable(); }
+function delRow(i){ logData.splice(i,1); renderTable(); }
+
+// ---- OCR: ดึงเลขไมล์ 5 หลัก 2 ตัวต่อบรรทัด แล้วตรวจความสมเหตุสมผล ----
+async function processImage(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  showStatus('กำลังอ่านรูปภาพ (OCR)... อาจใช้เวลาสักครู่');
+  try{
+    const w=await Tesseract.createWorker('tha+eng'); const ret=await w.recognize(f); await w.terminate();
+    let added=0;
+    ret.data.text.split('\n').forEach(line=>{
+      const nums=(line.match(/\d{5}/g)||[]).map(Number);
+      const t=line.match(/\d{1,2}[.:]\d{2}/g)||[];
+      if(nums.length>=2 && nums[1]>nums[0] && nums[1]-nums[0]<500){
+        logData.push(mk('','','',t[0]||'',t[1]||'','','',nums[0],nums[1])); added++;
+      }
+    });
+    hideStatus(); renderTable();
+    alert(added?`อ่านได้ ${added} แถว กรุณาตรวจสอบกับใบจริง (ลายมืออ่านยาก)`:'ไม่พบเลขไมล์ที่อ่านได้ ลองถ่ายรูปให้ตรงและสว่างขึ้น');
+  }catch(e){ hideStatus(); alert('เกิดข้อผิดพลาด: '+e.message); }
+}
+
+// ---- Export ตามฟอร์ม ----
+function exportExcel(){
+  const g=id=>document.getElementById(id).value;
+  const aoa=[
+    ['ทะเบียนรถ:',g('carId'),'','ฝ่าย:',g('department'),'','แผนก:',g('section')],
+    ['','','','เวลา','','สถานที่','','เลขไมล์','','', 'สถานที่ชาร์จ','','','','','เลขมิเตอร์ชาร์จไฟ','','ยอดรวม'],
+    ['วันที่','ผู้ใช้รถ','วัตถุประสงค์การใช้งาน','ออก','ถึง','ต้นทาง','ปลายทาง','เริ่มต้น','สิ้นสุด','รวมระยะทาง',...chgLabels,'เริ่มต้น','สิ้นสุด','KWh']
+  ];
+  logData.forEach(r=>{
+    const {dist,kwh}=calc(r);
+    aoa.push([r.date,r.driver,r.purpose,r.timeOut,r.timeIn,r.from,r.to,r.odoStart,r.odoEnd,dist??'',r.c1,r.c2,r.c3,r.c4,r.ext,r.chgStart,r.chgEnd,kwh??'']);
+  });
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'บันทึกการใช้รถ');
+  XLSX.writeFile(wb,`Vehicle_Log_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ---- Import (รูปแบบเดียวกับที่ส่งออก: ข้าม 3 แถวหัว) ----
+function importExcel(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const js=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+    logData=[];
+    for(let i=3;i<js.length;i++){ const r=js[i]; if(r&&r.length){
+      const v=j=>r[j]??'';
+      logData.push({date:v(0),driver:v(1),purpose:v(2),timeOut:v(3),timeIn:v(4),from:v(5),to:v(6),odoStart:v(7),odoEnd:v(8),
+        c1:v(10),c2:v(11),c3:v(12),c4:v(13),ext:v(14),chgStart:v(15),chgEnd:v(16)});
+    }}
+    renderTable(); alert('นำเข้าข้อมูลเรียบร้อยแล้ว');
+  };
+  rd.readAsArrayBuffer(f);
+}
+const showStatus=t=>{document.getElementById('statusText').innerText=t;document.getElementById('statusBox').classList.remove('hidden')};
+const hideStatus=()=>document.getElementById('statusBox').classList.add('hidden');
+
+renderHead(); renderTable();
+</script>
+</body>
+</html>
