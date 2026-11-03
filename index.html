@@ -90,7 +90,7 @@ footer{text-align:center;color:#627b94;font-size:10px;padding:25px}
 <div class="notice">OCR อ่านลายมือไทยได้ไม่แม่น ควรเทียบกับรูปแล้วแก้ค่าในตารางนี้ก่อนกดเพิ่ม ช่องไมล์เริ่มที่ว่างจะต่อจากไมล์สิ้นสุดของแถวก่อนหน้า</div>
 <div class="actions"><button class="btn primary" onclick="scanCommit()">เพิ่มเข้าตาราง</button><button class="btn secondary" onclick="scanClose()">ยกเลิก</button></div></div>
 <div class="panel">
-<div class="filters"><input id="search" placeholder="ค้นหาผู้ขับขี่ / สถานที่ / วัตถุประสงค์"><input type="date" id="filterFrom" aria-label="วันที่เริ่ม"><input type="date" id="filterTo" aria-label="วันที่สิ้นสุด"><button class="btn secondary" onclick="renderHistory()">ค้นหา</button><button class="btn secondary" onclick="clearFilters()">ล้างตัวกรอง</button></div>
+<div class="filters"><input id="search" placeholder="ค้นหาผู้ขับขี่ / สถานที่ / วัตถุประสงค์"><input type="date" id="filterFrom" aria-label="วันที่เริ่ม"><input type="date" id="filterTo" aria-label="วันที่สิ้นสุด"><select id="filterMonth" onchange="renderHistory()" aria-label="เดือน"></select><button class="btn secondary" onclick="renderHistory()">ค้นหา</button><button class="btn secondary" onclick="clearFilters()">ล้างตัวกรอง</button></div>
 <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>ผู้ขับขี่</th><th>วัตถุประสงค์</th><th>เวลา</th><th>ต้นทาง → ปลายทาง</th><th>ไมล์เริ่ม</th><th>ไมล์สิ้นสุด</th><th>ระยะทาง km</th><th>จุดชาร์จ</th><th>พลังงาน kWh</th><th>จัดการ</th></tr></thead><tbody id="historyBody"></tbody></table></div>
 </div>
 </section>
@@ -108,7 +108,7 @@ footer{text-align:center;color:#627b94;font-size:10px;padding:25px}
 <section id="settings" class="page">
 <div class="section-head"><div><h2>ตั้งค่าระบบและสำรองข้อมูล</h2><p>จัดการข้อมูลรถและไฟล์สำรองในอุปกรณ์นี้</p></div></div>
 <div class="panel"><h3>ข้อมูลรถปฏิบัติการ</h3><div class="form-grid"><div class="field"><label>ทะเบียนรถ</label><input id="plateSetting"></div><div class="field w2"><label>ฝ่าย / แผนก</label><input id="deptSetting"></div></div><div class="actions"><button class="btn primary" onclick="saveSettings()">บันทึกการตั้งค่า</button></div></div>
-<div class="panel"><h3>สำรองและกู้คืนข้อมูล</h3><p class="hint">ข้อมูลถูกจัดเก็บใน Local Storage ของเบราว์เซอร์นี้ ไม่ได้ส่งขึ้นอินเทอร์เน็ต ควรส่งออกไฟล์สำรองเป็นระยะ</p><div class="actions"><button class="btn success" onclick="exportJSON()">ดาวน์โหลด Backup JSON</button><label class="btn secondary" for="restoreFile" style="cursor:pointer">นำเข้า Backup JSON</label><input id="restoreFile" type="file" accept=".json,application/json" style="display:none" onchange="importJSON(event)"><button class="btn danger" onclick="clearAll()">ลบข้อมูลรายการทั้งหมด</button></div></div>
+<div class="panel"><h3>สำรองและกู้คืนข้อมูล</h3><p class="hint">ข้อมูลถูกจัดเก็บใน Local Storage ของเบราว์เซอร์นี้ ไม่ได้ส่งขึ้นอินเทอร์เน็ต ควรส่งออกไฟล์สำรองเป็นระยะ ไฟล์สำรองเป็น Excel แยกชีตตามเดือน (1 ชีต = 1 เดือน)</p><div class="actions"><button class="btn success" onclick="exportBackup()">ดาวน์โหลด Backup (Excel)</button><label class="btn secondary" for="restoreFile" style="cursor:pointer">นำเข้า Backup (Excel)</label><input id="restoreFile" type="file" accept=".xlsx" style="display:none" onchange="importXLSX(event,'replace')"><button class="btn danger" onclick="clearAll()">ลบข้อมูลรายการทั้งหมด</button></div></div>
 </section>
 <footer>BELLY ENGINEERING • EV FLEET & CHARGING CONTROL • OFFLINE READY</footer>
 </main>
@@ -157,13 +157,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  * @copyright Louis-Dominique Dubeau
  */function n(e){return e>=65&&e<=90||95===e||e>=97&&e<=122||e>=192&&e<=214||e>=216&&e<=246||e>=248&&e<=767||e>=880&&e<=893||e>=895&&e<=8191||e>=8204&&e<=8205||e>=8304&&e<=8591||e>=11264&&e<=12271||e>=12289&&e<=55295||e>=63744&&e<=64975||e>=65008&&e<=65533||e>=65536&&e<=983039}Object.defineProperty(r,"__esModule",{value:!0}),r.NC_NAME_START_CHAR="A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\ud800\udc00-\udb7f\udfff",r.NC_NAME_CHAR="-"+r.NC_NAME_START_CHAR+".0-9\xb7\u0300-\u036f\u203f-\u2040",r.NC_NAME_START_CHAR_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]$","u"),r.NC_NAME_CHAR_RE=new RegExp("^["+r.NC_NAME_CHAR+"]$","u"),r.NC_NAME_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]["+r.NC_NAME_CHAR+"]*$","u"),r.isNCNameStartChar=n,r.isNCNameChar=function(e){return n(e)||45===e||46===e||e>=48&&e<=57||183===e||e>=768&&e<=879||e>=8255&&e<=8256}},{}]},{},[15])(15)}));
 //# sourceMappingURL=exceljs.min.js.map</script>
-<script>
+<script>const _ls=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return localStorage}catch(e){const m={};return{getItem:k=>(k in m?m[k]:null),setItem:(k,v)=>{m[k]=String(v)}}}})();
+
 const KEY='belly_ev_fleet_v1';
-let rows=JSON.parse(localStorage.getItem(KEY)||'[]');
+let rows=JSON.parse(_ls.getItem(KEY)||'[]');
 const $=id=>document.getElementById(id);
 const n=v=>v===''||v===null||v===undefined?0:Number(v);
 const fmt=(v,d=2)=>Number(v||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-function save(){localStorage.setItem(KEY,JSON.stringify(rows));}
+function save(){_ls.setItem(KEY,JSON.stringify(rows));}
 function calc(){
  const dist=n($('odoEnd').value)-n($('odoStart').value);
  const energy=n($('meterEnd').value)-n($('meterStart').value);
@@ -193,11 +194,12 @@ function editRow(id){
 function deleteRow(id){if(!confirm('ยืนยันลบรายการนี้?'))return;rows=rows.filter(x=>x.id!==id);save();render();}
 function renderHistory(){
  const q=$('search').value.toLowerCase(),from=$('filterFrom').value,to=$('filterTo').value;
- const list=rows.filter(r=>(!from||r.date>=from)&&(!to||r.date<=to)&&(!q||[r.driver,r.purpose,r.origin,r.destination,r.site].join(' ').toLowerCase().includes(q))).slice().reverse();
+ const list=rows.filter(r=>(!$('filterMonth').value||monthKey(r)===$('filterMonth').value)&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!q||[r.driver,r.purpose,r.origin,r.destination,r.site].join(' ').toLowerCase().includes(q))).slice().reverse();
  $('historyBody').innerHTML=list.length?list.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.driver)}</td><td>${esc(r.purpose)}</td><td>${esc(r.timeOut)}–${esc(r.timeIn)}</td><td>${esc(r.origin)} → ${esc(r.destination)}</td><td>${fmt(r.odoStart,1)}</td><td>${fmt(r.odoEnd,1)}</td><td><b>${fmt(r.distance,2)}</b></td><td>${esc(r.site||'-')}</td><td>${fmt(r.energy,3)}</td><td><button class="btn secondary" onclick="editRow('${r.id}')">แก้ไข</button> <button class="btn danger" onclick="deleteRow('${r.id}')">ลบ</button></td></tr>`).join(''):'<tr><td colspan="11" class="empty">ยังไม่มีรายการ หรือไม่พบข้อมูลที่ค้นหา</td></tr>';
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function render(){
+ fillMonths();
  const dist=rows.reduce((s,r)=>s+n(r.distance),0),energy=rows.reduce((s,r)=>s+n(r.energy),0),count=rows.length,siteNames=['สีคิ้ว','เชียงราก','ปั๊มนอก'];
  const sums=siteNames.map(site=>rows.filter(r=>r.site===site).reduce((s,r)=>s+n(r.energy),0));
  $('mDistance').innerHTML=fmt(dist,1)+' <small>km</small>';$('mEnergy').innerHTML=fmt(energy,3)+' <small>kWh</small>';$('mEfficiency').innerHTML=(energy?fmt(dist/energy,3):'—')+' <small>km/kWh</small>';$('mTrips').innerHTML=count+' <small>เที่ยว</small>';
@@ -208,12 +210,12 @@ function render(){
  $('chargeBody').innerHTML=charges.length?charges.map(r=>`<tr><td>${esc(r.date)}</td><td>${r.odoCharge?fmt(r.odoCharge,1):'-'}</td><td>${esc(r.site||'-')}</td><td>${r.meterStart===''?'-':fmt(r.meterStart,3)}</td><td>${r.meterEnd===''?'-':fmt(r.meterEnd,3)}</td><td><b>${fmt(r.energy,3)}</b></td></tr>`).join(''):'<tr><td colspan="6" class="empty">ยังไม่มีข้อมูลการชาร์จ</td></tr>';
  renderHistory();
 }
-function clearFilters(){$('search').value='';$('filterFrom').value='';$('filterTo').value='';renderHistory();}
+function clearFilters(){$('filterMonth').value='';$('search').value='';$('filterFrom').value='';$('filterTo').value='';renderHistory();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function exportCSV(){
  const head=['วันที่','ผู้ขับขี่','วัตถุประสงค์','เวลาออก','เวลาถึง','ต้นทาง','ปลายทาง','เลขไมล์เริ่ม','เลขไมล์สิ้นสุด','ระยะทาง km','สถานที่ชาร์จ','เลขไมล์ขณะชาร์จ','มิเตอร์เริ่ม kWh','มิเตอร์สิ้นสุด kWh','พลังงาน kWh','หมายเหตุ'];
  const keys=['date','driver','purpose','timeOut','timeIn','origin','destination','odoStart','odoEnd','distance','site','odoCharge','meterStart','meterEnd','energy','note'];
- const data=[head,...rows.map(r=>keys.map(k=>r[k]??''))].map(row=>row.map(csvCell).join(',')).join('\r\n');
+ const data=[head,...monthRows().map(r=>keys.map(k=>r[k]??''))].map(row=>row.map(csvCell).join(',')).join('\r\n');
  download('\ufeff'+data,'belly_ev_fleet_report.csv','text/csv;charset=utf-8');
 }
 
@@ -222,9 +224,9 @@ const numX=v=>(v===''||v==null||isNaN(Number(v)))?null:Number(v);
 const rndX=x=>Math.round(x*1000)/1000;
 function dateBE(d){const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m)return d||null;let y=+m[1];if(y<2400)y+=543;return new Date(Date.UTC(y,+m[2]-1,+m[3]));}
 function timeX(t){const m=String(t||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1]*60+ +m[2])/1440:null;}
-function buildForm(){
+function buildForm(list,wb,label){
   const PAGE=17,TOP=9,FONT='Angsana New';
-  const recs=rows.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const recs=list.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   // เตรียมค่าต่อแถว: สีคิ้ว = มิเตอร์ (Q,R,S) · เชียงราก/ปั๊มนอก = พิมพ์หน่วยลงช่อง N/O
   let lastM=null;
   const M=recs.map(r=>{
@@ -237,7 +239,7 @@ function buildForm(){
     return m;
   });
   const pages=[];for(let i=0;i<Math.max(M.length,1);i+=PAGE)pages.push(i);
-  const names=pages.map((_,p)=>`รายงานการใช้รถปฏิบัติการ ${p+1}`);
+  const names=pages.map((_,p)=>`${label} หน้า ${p+1}`);
   const q=s=>`'${s}'`,rng=c=>names.map(s=>`SUM(${q(s)}!${c}${TOP}:${c}${TOP+PAGE-1})`).join('+');
   const thin={style:'thin'},med={style:'medium'},box=s=>({top:s,left:s,bottom:s,right:s});
   const widths={A:1.9,B:11.5,C:11.5,D:27,E:8,F:8,G:11,H:13,I:9.5,J:9.5,K:11,L:13,M:8,N:9,O:9,P:8,Q:9.5,R:9.5,S:11};
@@ -247,12 +249,11 @@ function buildForm(){
   const kwhS=M.reduce((t,m)=>t+((m.qS!=null&&m.qE!=null)?m.qE-m.qS:0),0);
   const chi=M.reduce((t,m)=>t+(m.N||0),0), pump=M.reduce((t,m)=>t+(m.O||0),0), total=kwhS+chi+pump;
   const km=(first!=null&&last!=null)?last-first:0, avg=total?km/total:0;
-  const wb=new ExcelJS.Workbook();
   pages.forEach((start,p)=>{
     const ws=wb.addWorksheet(names[p],{pageSetup:{paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:1}});
     Object.entries(widths).forEach(([k,w])=>ws.getColumn(k).width=w);
     const put=(a,v,o={})=>{const c=ws.getCell(a);c.value=v;c.font={name:FONT,size:o.size||14,bold:!!o.bold};if(o.fmt)c.numFmt=o.fmt;c.alignment={vertical:'middle',horizontal:o.h,wrapText:!!o.wrap};return c;};
-    ws.mergeCells('B1:S1');put('B1','รายงานการใช้รถปฏิบัติการ',{size:20,bold:true,h:'center'});
+    ws.mergeCells('B1:S1');put('B1','รายงานการใช้รถปฏิบัติการ ประจำเดือน '+label,{size:20,bold:true,h:'center'});
     ws.mergeCells('H5:I5');ws.mergeCells('K5:S5');
     put('B5','ทะเบียนรถ : '+plate,{size:16,bold:true});put('H5','ฝ่าย : '+(dep[0]||''),{size:16,bold:true,h:'left'});put('K5','แผนก : '+(dep[1]||''),{size:16,bold:true,h:'left'});
     ['B7:B8','C7:C8','D7:D8','E7:F7','G7:H7','I7:J7','K7:K8','L7:P7','Q7:R7','S7:S8'].forEach(r=>ws.mergeCells(r));
@@ -294,14 +295,58 @@ function buildForm(){
   });
   return wb;
 }
+const XLSX_MIME='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const monthKey=r=>String(r.date||'').slice(0,7);
+const monthLabel=k=>{const [y,m]=k.split('-');return TH_M[+m-1]+' '+(+y+543);};
+const monthKeys=()=>[...new Set(rows.map(monthKey).filter(k=>/^\d{4}-\d{2}$/.test(k)))].sort();
+const monthRows=()=>{const m=$('filterMonth').value;return m?rows.filter(r=>monthKey(r)===m):rows;};
+function fillMonths(){
+  const sel=$('filterMonth'),cur=sel.value,ks=monthKeys();
+  sel.innerHTML='<option value="">ทุกเดือน</option>'+ks.slice().reverse().map(k=>`<option value="${k}">${monthLabel(k)} (${rows.filter(r=>monthKey(r)===k).length})</option>`).join('');
+  sel.value=ks.includes(cur)?cur:'';
+}
 async function exportXLSX(){
-  if(!rows.length){alert('ยังไม่มีข้อมูลให้ส่งออก');return;}
+  const sel=$('filterMonth').value,keys=sel?[sel]:monthKeys();
+  if(!keys.length){alert('ยังไม่มีข้อมูลให้ส่งออก');return;}
   try{
-    const buf=await buildForm().xlsx.writeBuffer();
-    download(buf,'แบบฟอร์มรายงานการใช้รถปฏิบัติการ_'+new Date().toISOString().slice(0,10)+'.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    const wb=new ExcelJS.Workbook();
+    keys.forEach(k=>buildForm(rows.filter(r=>monthKey(r)===k),wb,monthLabel(k)));
+    download(await wb.xlsx.writeBuffer(),'แบบฟอร์มรายงานการใช้รถปฏิบัติการ_'+(sel?monthLabel(sel).replace(/\s/g,''):'ทุกเดือน_'+new Date().toISOString().slice(0,10))+'.xlsx',XLSX_MIME);
   }catch(e){alert('ส่งออก Excel ไม่สำเร็จ: '+e.message);}
 }
-
+// ===== Backup เป็น Excel: 1 ชีต = 1 เดือน (+ ชีต "ข้อมูลรถ") =====
+const BK=[['date','วันที่',12],['driver','ผู้ขับขี่',16],['purpose','วัตถุประสงค์',30],['timeOut','เวลาออก',9],['timeIn','เวลาถึง',9],['origin','ต้นทาง',14],['destination','ปลายทาง',14],['odoStart','ไมล์เริ่มต้น',11],['odoEnd','ไมล์สิ้นสุด',11],['distance','ระยะทาง (กม.)',12],['site','จุดชาร์จ',11],['odoCharge','เลขไมล์ขณะชาร์จ',14],['meterStart','มิเตอร์เริ่ม',11],['meterEnd','มิเตอร์สิ้นสุด',11],['energy','พลังงาน (kWh)',13],['note','หมายเหตุ',24]];
+async function exportBackup(){
+  const keys=monthKeys();
+  if(!rows.length){alert('ยังไม่มีข้อมูลให้สำรอง');return;}
+  try{
+    const wb=new ExcelJS.Workbook(),F='Angsana New',nz=v=>numX(v);
+    const wi=wb.addWorksheet('ข้อมูลรถ');wi.getColumn(1).width=18;wi.getColumn(2).width=40;
+    [['ทะเบียนรถ',$('plate').value],['ฝ่าย / แผนก',$('department').value],['สำรองเมื่อ',new Date().toISOString().slice(0,19).replace('T',' ')],['จำนวนรายการ',rows.length],['หมายเหตุ','ชีตรายเดือนนำเข้ากลับได้ที่ ตั้งค่าระบบ > นำเข้า Backup (Excel) — อย่าเปลี่ยนหัวคอลัมน์แถวที่ 1']].forEach((r,i)=>{r.forEach((v,j)=>{const c=wi.getCell(i+1,j+1);c.value=v;c.font={name:F,size:14,bold:j===0};});});
+    const groups=keys.map(k=>[k,rows.filter(r=>monthKey(r)===k)]);
+    const nodate=rows.filter(r=>!/^\d{4}-\d{2}$/.test(monthKey(r)));if(nodate.length)groups.push(['ไม่ระบุวันที่',nodate]);
+    groups.forEach(([k,list])=>{
+      const ws=wb.addWorksheet(/^\d{4}-\d{2}$/.test(k)?monthLabel(k):k);
+      BK.forEach(([,t,w],i)=>{ws.getColumn(i+1).width=w;const c=ws.getCell(1,i+1);c.value=t;c.font={name:F,size:14,bold:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDEDED'}};c.border={bottom:{style:'medium'}};c.alignment={horizontal:'center',vertical:'middle'};});
+      ws.views=[{state:'frozen',ySplit:1}];
+      const sorted=list.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+      sorted.forEach((r,ri)=>{
+        BK.forEach(([key],i)=>{
+          const c=ws.getCell(ri+2,i+1);let v=r[key];c.font={name:F,size:14};
+          if(key==='date'){v=dateBE(v);c.numFmt='dd/mm/yyyy';}
+          else if(['odoStart','odoEnd','distance','odoCharge','meterStart','meterEnd','energy'].includes(key)){v=nz(v);if(key==='energy')c.numFmt='0.000';}
+          else v=(v===''||v==null)?null:String(v);
+          c.value=v;
+        });
+      });
+      const last=sorted.length+1,dsum=sorted.reduce((t,r)=>t+(numX(r.distance)||0),0),esum=sorted.reduce((t,r)=>t+(numX(r.energy)||0),0);
+      ws.getColumn(18).width=20;ws.getColumn(19).width=14;
+      [['รวมระยะทาง (กม.)',{formula:`SUM(J2:J${last})`,result:dsum}],['รวมพลังงาน (kWh)',{formula:`SUM(O2:O${last})`,result:rndX(esum)}],['จำนวนรายการ',{formula:`COUNTA(A2:A${last})`,result:sorted.length}]].forEach(([t,v],i)=>{const a=ws.getCell(i+1,18),b=ws.getCell(i+1,19);a.value=t;a.font={name:F,size:14,bold:true};b.value=v;b.font={name:F,size:14};});
+    });
+    download(await wb.xlsx.writeBuffer(),'BELLY_EV_Backup_'+new Date().toISOString().slice(0,10)+'.xlsx',XLSX_MIME);
+  }catch(e){alert('สำรองข้อมูลไม่สำเร็จ: '+e.message);}
+}
 // ===== สแกนจากรูป (OCR) → ตรวจสอบ → เพิ่มเข้าตาราง =====
 let scanDraft=[];
 const pad2=v=>String(v).padStart(2,'0');
@@ -391,20 +436,32 @@ function xlDate(v){
   return '';
 }
 const xlClean=(t,label)=>String(t||'').replace(label,'').replace(/\.{2,}/g,'').replace(/^[\s:]+|[\s:.]+$/g,'');
-async function importXLSX(ev){
+async function importXLSX(ev,mode){
   const f=ev.target.files[0];ev.target.value='';if(!f)return;
   try{
     const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
-    const out=[];let pe=null,pm=null,first=true,seq=0,plate='',dept='',sect='';
+    const out=[];let pe=null,pm=null,seq=0,plate='',dept='',sect='',formFirst=true;
+    const nid=()=>Date.now()+'-'+(seq++),xn=x=>typeof x==='number'?x:null,tx=x=>x==null?'':String(x);
     wb.worksheets.forEach(ws=>{
-      if(first){first=false;plate=xlClean(xlRaw(ws.getCell('B5')),'ทะเบียนรถ');dept=xlClean(xlRaw(ws.getCell('H5')),'ฝ่าย');sect=xlClean(xlRaw(ws.getCell('K5')),'แผนก');}
+      const a1=xlRaw(ws.getCell('A1')),b1=xlRaw(ws.getCell('B1'));
+      if(a1==='ทะเบียนรถ'){plate=tx(b1);dept=tx(xlRaw(ws.getCell('B2')));return;}           // ชีตข้อมูลรถ (Backup)
+      if(a1==='วันที่'&&b1==='ผู้ขับขี่'){                                                  // ชีตรายเดือน (Backup)
+        for(let r=2;r<=ws.rowCount;r++){
+          const row=ws.getRow(r),v={};BK.forEach(([k],i)=>v[k]=xlRaw(row.getCell(i+1)));
+          const date=xlDate(v.date),a=xn(v.odoStart),b=xn(v.odoEnd);if(!date||a==null||b==null)continue;
+          const ms=xn(v.meterStart),me=xn(v.meterEnd);
+          out.push({id:nid(),date,driver:tx(v.driver),purpose:tx(v.purpose),timeOut:xlHM(v.timeOut),timeIn:xlHM(v.timeIn),origin:tx(v.origin),destination:tx(v.destination),odoStart:a,odoEnd:b,distance:b-a,site:tx(v.site),odoCharge:xn(v.odoCharge)==null?'':xn(v.odoCharge),meterStart:ms==null?'':ms,meterEnd:me==null?'':me,energy:xn(v.energy)||0,note:tx(v.note)});
+        }
+        return;
+      }
+      // ฟอร์มรายงานการใช้รถปฏิบัติการ
+      if(formFirst){formFirst=false;const pl=xlClean(xlRaw(ws.getCell('B5')),'ทะเบียนรถ'),dp=xlClean(xlRaw(ws.getCell('H5')),'ฝ่าย'),sc=xlClean(xlRaw(ws.getCell('K5')),'แผนก');if(pl)plate=pl;if(dp||sc){dept=dp;sect=sc;}}
       for(let r=9;r<=25;r++){
         const C=cl=>ws.getCell(cl+r),g=cl=>xlRaw(C(cl)),nv=cl=>{const v=g(cl);return typeof v==='number'?v:null;};
         const b=nv('J');if(b==null)continue;
         let a=xlIsF(C('I'))?pe:nv('I');if(a==null)a=pe;if(a==null)a=b;
         let ms=xlIsF(C('Q'))?pm:nv('Q');if(ms==null)ms=pm;const me=nv('R');
         pe=b;if(me!=null)pm=me;
-        // ชาร์จ: สีคิ้ว = มิเตอร์ (Q→R) + ช่องสีคิ้ว · เชียงราก (N) · ปั้มนอก (O)
         const ch=[];
         if(ms!=null&&me!=null&&me>ms)ch.push({site:'สีคิ้ว',energy:me-ms,ms,me});
         if((nv('M')||0)>0)ch.push({site:'สีคิ้ว',energy:nv('M')});
@@ -412,28 +469,37 @@ async function importXLSX(ev){
         if((nv('O')||0)>0)ch.push({site:'ปั๊มนอก',energy:nv('O')});
         const base={date:xlDate(g('B')),driver:g('C')||'',purpose:g('D')||'',timeOut:xlHM(g('E')),timeIn:xlHM(g('F')),origin:g('G')||'',destination:g('H')||'',odoStart:a,odoEnd:b,distance:b-a,odoCharge:nv('L')==null?'':nv('L'),note:'นำเข้าจาก Excel'};
         const c0=ch[0];
-        out.push({...base,id:Date.now()+'-'+(seq++),site:c0?c0.site:'',meterStart:c0&&c0.ms!=null?c0.ms:'',meterEnd:c0&&c0.me!=null?c0.me:'',energy:c0?c0.energy:0});
-        ch.slice(1).forEach(c=>out.push({...base,id:Date.now()+'-'+(seq++),purpose:'ชาร์จเพิ่ม · '+base.purpose,timeOut:'',timeIn:'',origin:'',destination:'',odoStart:b,odoEnd:b,distance:0,odoCharge:'',site:c.site,meterStart:'',meterEnd:'',energy:c.energy,note:'แยกจากแถวเดียวกันในฟอร์ม Excel'}));
+        out.push({...base,id:nid(),site:c0?c0.site:'',meterStart:c0&&c0.ms!=null?c0.ms:'',meterEnd:c0&&c0.me!=null?c0.me:'',energy:c0?c0.energy:0});
+        ch.slice(1).forEach(c=>out.push({...base,id:nid(),purpose:'ชาร์จเพิ่ม · '+base.purpose,timeOut:'',timeIn:'',origin:'',destination:'',odoStart:b,odoEnd:b,distance:0,odoCharge:'',site:c.site,meterStart:'',meterEnd:'',energy:c.energy,note:'แยกจากแถวเดียวกันในฟอร์ม Excel'}));
       }
     });
-    const key=r=>[r.date,r.driver,r.odoStart,r.odoEnd,r.site,Math.round(n(r.energy)*1000)].join('|');
-    const have=new Set(rows.map(key));const fresh=out.filter(r=>!have.has(key(r)));const dup=out.length-fresh.length;
-    if(!out.length){alert('ไม่พบข้อมูลในไฟล์ (ต้องเป็นฟอร์มรายงานการใช้รถปฏิบัติการ ข้อมูลเริ่มแถว 9)');return;}
-    if(!fresh.length){alert('ข้อมูลทั้งหมด '+dup+' รายการมีอยู่ในระบบแล้ว');return;}
-    if(!confirm('พบ '+fresh.length+' รายการ'+(dup?' (ข้ามรายการซ้ำ '+dup+')':'')+'\nเพิ่มต่อท้ายข้อมูลเดิมในระบบ?'))return;
-    rows.push(...fresh);rows.sort((x,y)=>x.date.localeCompare(y.date));save();
-    if(plate)$('plate').value=plate;if(dept||sect)$('department').value=[dept,sect].filter(Boolean).join(' / ');
+    if(!out.length){alert('ไม่พบข้อมูลในไฟล์ (รองรับไฟล์ Backup ของแอปนี้ และฟอร์มรายงานการใช้รถปฏิบัติการ)');return;}
+    const months=new Set(out.map(monthKey).filter(Boolean)).size;
+    let added;
+    if(mode==='replace'){
+      if(!confirm('นำเข้า '+out.length+' รายการ ('+months+' เดือน)\nแทนที่ข้อมูลปัจจุบันทั้งหมด?'))return;
+      rows=out;added=out.length;
+    }else{
+      const key=r=>[r.date,r.driver,r.odoStart,r.odoEnd,r.site,Math.round(n(r.energy)*1000)].join('|');
+      const have=new Set(rows.map(key)),fresh=out.filter(r=>!have.has(key(r))),dup=out.length-fresh.length;
+      if(!fresh.length){alert('ข้อมูลทั้งหมด '+dup+' รายการมีอยู่ในระบบแล้ว');return;}
+      if(!confirm('พบ '+fresh.length+' รายการ ('+months+' เดือน)'+(dup?' ข้ามรายการซ้ำ '+dup:'')+'\nเพิ่มต่อท้ายข้อมูลเดิมในระบบ?'))return;
+      rows.push(...fresh);added=fresh.length;
+    }
+    rows.sort((x,y)=>String(x.date).localeCompare(String(y.date)));save();
+    if(plate)$('plate').value=plate;
+    const dd=[dept,sect].filter(Boolean).join(' / ');if(dd)$('department').value=dd;
     if($('plateSetting'))$('plateSetting').value=$('plate').value;if($('deptSetting'))$('deptSetting').value=$('department').value;
-    localStorage.setItem('belly_ev_vehicle_v1',JSON.stringify({plate:$('plate').value,department:$('department').value}));
-    render();alert('นำเข้า '+fresh.length+' รายการเรียบร้อย');
+    _ls.setItem('belly_ev_vehicle_v1',JSON.stringify({plate:$('plate').value,department:$('department').value}));
+    render();alert('นำเข้า '+added+' รายการเรียบร้อย');
   }catch(e){alert('อ่านไฟล์ Excel ไม่สำเร็จ: '+e.message);}
 }
 function exportJSON(){download(JSON.stringify({app:'BELLY EV Fleet',version:1,exportedAt:new Date().toISOString(),vehicle:$('plate').value,department:$('department').value,records:rows},null,2),'belly_ev_backup.json','application/json');}
 function download(content,name,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 function importJSON(e){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const obj=JSON.parse(rd.result),data=Array.isArray(obj)?obj:obj.records;if(!Array.isArray(data))throw Error();if(!confirm('นำเข้าข้อมูล '+data.length+' รายการ? ข้อมูลปัจจุบันจะถูกแทนที่'))return;rows=data;save();if(obj.vehicle)$('plate').value=obj.vehicle;if(obj.department)$('department').value=obj.department;saveSettings();render();alert('นำเข้าข้อมูลสำเร็จ')}catch(err){alert('ไฟล์ Backup ไม่ถูกต้อง')}};rd.readAsText(f);e.target.value='';}
-function saveSettings(){$('plate').value=$('plateSetting').value;$('department').value=$('deptSetting').value;localStorage.setItem('belly_ev_vehicle_v1',JSON.stringify({plate:$('plate').value,department:$('department').value}));alert('บันทึกการตั้งค่าแล้ว');}
+function saveSettings(){$('plate').value=$('plateSetting').value;$('department').value=$('deptSetting').value;_ls.setItem('belly_ev_vehicle_v1',JSON.stringify({plate:$('plate').value,department:$('department').value}));alert('บันทึกการตั้งค่าแล้ว');}
 function clearAll(){if(!confirm('ยืนยันลบข้อมูลรายการทั้งหมด? แนะนำให้ดาวน์โหลด Backup ก่อน'))return;rows=[];save();render();}
-const settings=JSON.parse(localStorage.getItem('belly_ev_vehicle_v1')||'null');if(settings){$('plate').value=settings.plate||'';$('department').value=settings.department||''}
+const settings=JSON.parse(_ls.getItem('belly_ev_vehicle_v1')||'null');if(settings){$('plate').value=settings.plate||'';$('department').value=settings.department||''}
 $('plateSetting').value=$('plate').value;$('deptSetting').value=$('department').value;
 $('date').value=new Date().toISOString().slice(0,10);calc();render();
 </script>
