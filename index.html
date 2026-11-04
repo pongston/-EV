@@ -22,7 +22,7 @@ nav{display:flex;gap:8px;overflow:auto;padding:4px 0 16px;margin-bottom:14px}nav
 footer{text-align:center;color:#627b94;font-size:10px;padding:25px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.field.w4{grid-column:span 2}}
 @media(max-width:560px){header{padding:14px}.status{display:none}main{margin-top:16px}.grid{gap:8px}.card{padding:13px}.metric{font-size:23px}.form-grid{grid-template-columns:1fr}.field.w2,.field.w4{grid-column:span 1}.panel{padding:13px}.section-head h2{font-size:18px}.vehicle{gap:8px}.vehicle input{max-width:150px}}
-@media print{body{background:white;color:#111}header,nav,.actions,.filters,.vehicle,.no-print{display:none!important}main{max-width:none;margin:0;padding:0}.page{display:none!important}#history.page{display:block!important}.panel,.card{background:white;color:#111;border:1px solid #aaa;break-inside:avoid}table{color:#111}th{background:#ddd;color:#111}td{color:#111}.metric-label,.section-head p{color:#444}}
+@media print{body{background:white;color:#111}header,nav,.actions,.filters,.vehicle,.no-print{display:none!important}main{max-width:none;margin:0;padding:0}.page{display:none!important}#history.page,#evlog.page.active{display:block!important}.panel,.card{background:white;color:#111;border:1px solid #aaa;break-inside:avoid}table{color:#111}th{background:#ddd;color:#111}td{color:#111}.metric-label,.section-head p{color:#444}}
 .scan td{padding:6px 5px}.scan input,.scan select{padding:7px 8px;font-size:11px;min-width:90px}.scan input[type=checkbox]{min-width:0;width:auto}.scan input[type=number]{min-width:84px}.scan .bad{outline:1px solid var(--red)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -32,7 +32,7 @@ footer{text-align:center;color:#627b94;font-size:10px;padding:25px}
 <main>
 <div class="vehicle"><label for="plate">ทะเบียนรถ</label><input id="plate" value="7ขส.9454"><label for="department">ฝ่าย / แผนก</label><input id="department" value="ผลิต / ผลิต6"></div>
 <nav>
-<button class="active" data-page="dashboard">▦ Dashboard</button><button data-page="entry">＋ บันทึกการใช้รถ</button><button data-page="history">▤ ประวัติรายการ</button><button data-page="charging">⚡ วิเคราะห์การชาร์จ</button><button data-page="settings">⚙ ตั้งค่าระบบ</button>
+<button class="active" data-page="dashboard">▦ Dashboard</button><button data-page="entry">＋ บันทึกการใช้รถ</button><button data-page="evlog">⚡ บันทึกขอใช้เครื่องชาร์จ EV</button><button data-page="history">▤ ประวัติรายการ</button><button data-page="charging">⚡ วิเคราะห์การชาร์จ</button><button data-page="settings">⚙ ตั้งค่าระบบ</button>
 </nav>
 <section id="dashboard" class="page active">
 <div class="section-head"><div><h2>Fleet Performance Dashboard</h2><p>ภาพรวมระยะทางและการใช้พลังงานของรถปฏิบัติการ</p></div><button class="btn secondary" onclick="render()">↻ Refresh</button></div>
@@ -80,6 +80,11 @@ footer{text-align:center;color:#627b94;font-size:10px;padding:25px}
 <div class="notice">ข้อควรตรวจสอบ: เลขไมล์สิ้นสุดต้องไม่น้อยกว่าเลขไมล์เริ่มต้น และเลขมิเตอร์สิ้นสุดต้องไม่น้อยกว่าเลขมิเตอร์เริ่มต้น ระบบจะไม่ยอมรับค่าติดลบ</div>
 </form>
 </section>
+<section id="evlog" class="page">
+<div class="section-head"><div><h2>ตารางบันทึกการขอใช้เครื่องชาร์จรถ EV</h2><p>ดึงเฉพาะรายการที่มีการบันทึกข้อมูลมิเตอร์ชาร์จไฟฟ้า</p></div><button class="btn secondary" onclick="exportEVChargingLogXLSX()">📥 ดาวน์โหลดฟอร์ม Excel บันทึกขอใช้เครื่องชาร์จ EV</button></div>
+<div class="panel"><div class="table-wrap"><table><thead><tr><th>วันที่</th><th>แผนก</th><th>ทะเบียนรถ</th><th>มิเตอร์เริ่มต้น (kWh)</th><th>มิเตอร์สิ้นสุด (kWh)</th><th>จำนวนหน่วยชาร์จ (kWh)</th><th>ลงชื่อผู้ชาร์จ</th></tr></thead><tbody id="evChargingLogBody"></tbody></table></div></div>
+</section>
+
 <section id="history" class="page">
 <div class="section-head"><div><h2>ประวัติการใช้รถ</h2><p>ค้นหา ตรวจสอบ แก้ไข และส่งออกรายการ</p></div><div class="actions" style="margin:0"><label class="btn secondary" for="xlsxFile" style="cursor:pointer">📥 นำเข้า Excel</label><input id="xlsxFile" type="file" accept=".xlsx" style="display:none" onchange="importXLSX(event)"><label class="btn primary" for="scanFile" style="cursor:pointer">📷 สแกนจากรูป</label><input id="scanFile" type="file" accept="image/*" style="display:none" onchange="scanImage(event)"><button class="btn success" onclick="exportXLSX()">Export Excel (ฟอร์ม)</button><button class="btn secondary" onclick="exportCSV()">Export CSV</button><button class="btn secondary" onclick="window.print()">Print Report</button></div></div>
 <div id="scanPanel" class="panel" style="display:none"><h3>สแกนจากรูป — ตรวจสอบก่อนเพิ่มเข้าตาราง</h3>
@@ -175,7 +180,7 @@ function calc(){
 function resetForm(){
  $('tripForm').reset();$('editId').value='';$('date').value=new Date().toISOString().slice(0,10);calc();
 }
-function nav(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===page));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));if(page==='history')renderHistory();if(page==='dashboard'||page==='charging')render();}
+function nav(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===page));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));if(page==='history')renderHistory();if(page==='dashboard'||page==='charging'||page==='evlog')render();}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.page)));
 $('tripForm').addEventListener('submit',e=>{
  e.preventDefault();
@@ -208,7 +213,24 @@ function render(){
  ['site0','site1','site2'].forEach((id,i)=>$(id).innerHTML=fmt(sums[i],3)+' <small>kWh</small>');$('siteTotal').innerHTML=fmt(energy,3)+' <small>kWh</small>';
  const charges=rows.filter(r=>n(r.energy)>0).slice().reverse();
  $('chargeBody').innerHTML=charges.length?charges.map(r=>`<tr><td>${esc(r.date)}</td><td>${r.odoCharge?fmt(r.odoCharge,1):'-'}</td><td>${esc(r.site||'-')}</td><td>${r.meterStart===''?'-':fmt(r.meterStart,3)}</td><td>${r.meterEnd===''?'-':fmt(r.meterEnd,3)}</td><td><b>${fmt(r.energy,3)}</b></td></tr>`).join(''):'<tr><td colspan="6" class="empty">ยังไม่มีข้อมูลการชาร์จ</td></tr>';
+ renderEVLog();
  renderHistory();
+}
+function evLogRows(){return rows.filter(r=>n(r.energy)>0||(r.meterStart!==''&&r.meterStart!=null)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));}
+function renderEVLog(){
+ const tb=$('evChargingLogBody');if(!tb)return;
+ const dept=$('department').value,plate=$('plate').value,list=evLogRows();
+ tb.innerHTML=list.length?list.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(dept)}</td><td>${esc(plate)}</td><td>${r.meterStart===''?'-':fmt(r.meterStart,3)}</td><td>${r.meterEnd===''?'-':fmt(r.meterEnd,3)}</td><td><b>${fmt(r.energy,3)}</b></td><td>${esc(r.driver)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">ไม่มีข้อมูลการขอใช้เครื่องชาร์จ EV</td></tr>';
+}
+async function exportEVChargingLogXLSX(){
+ const list=evLogRows();
+ if(!list.length){alert('ยังไม่มีข้อมูลการชาร์จสำหรับ Export');return;}
+ try{
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('บันทึกการชาร์จ EV'),dept=$('department').value,plate=$('plate').value;
+  ws.columns=[{header:'วันที่',key:'date',width:15},{header:'แผนก',key:'dept',width:18},{header:'ทะเบียนรถ',key:'plate',width:15},{header:'มิเตอร์เริ่มต้น (kWh)',key:'ms',width:22},{header:'มิเตอร์สิ้นสุด (kWh)',key:'me',width:22},{header:'จำนวนหน่วยชาร์จ (kWh)',key:'en',width:24},{header:'ลงชื่อผู้ชาร์จ',key:'driver',width:20}];
+  list.forEach(r=>ws.addRow({date:r.date,dept,plate,ms:numX(r.meterStart)??'',me:numX(r.meterEnd)??'',en:n(r.energy),driver:r.driver}));
+  download(await wb.xlsx.writeBuffer(),'EV_Charging_Log_'+plate+'_'+new Date().toISOString().slice(0,10)+'.xlsx',XLSX_MIME);
+ }catch(e){alert('ส่งออก Excel ไม่สำเร็จ: '+e.message);}
 }
 function clearFilters(){$('filterMonth').value='';$('search').value='';$('filterFrom').value='';$('filterTo').value='';renderHistory();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
